@@ -9,10 +9,12 @@ import java.util.List;
 @Data
 @Entity
 public class Person {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     private String name;
+    private String password;
 
     @OneToMany(cascade = CascadeType.ALL)
     private List<Message> messages = new ArrayList<>();
