@@ -3,6 +3,7 @@ package ru.job4j.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Role;
 import ru.job4j.repository.RoleRepository;
 
@@ -26,21 +27,26 @@ public class RoleController {
     @GetMapping("/{id}")
     public ResponseEntity<Role> findById(@PathVariable int id) {
         var role = roleRepository.findById(id);
-        return new ResponseEntity<Role>(
-                role.orElse(new Role()),
-                role.isPresent() ? HttpStatus.OK : HttpStatus.NOT_FOUND
-        );
+        return new ResponseEntity<Role>(role.orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Wrong id! Role not found!")), HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Role> create(@RequestBody Role Role) {
-        var savedRole = roleRepository.save(Role);
+    public ResponseEntity<Role> create(@RequestBody Role role) {
+        if (role.getName() == null) {
+            throw new NullPointerException("Error! Name of role is null!");
+        }
+        var savedRole = roleRepository.save(role);
         return new ResponseEntity<>(savedRole, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Role Role) {
-        roleRepository.save(Role);
+    public ResponseEntity<Void> update(@RequestBody Role role) {
+        if (role.getName() == null) {
+            throw new NullPointerException("Error! Name of role is null!");
+        }
+        roleRepository.save(role);
         return ResponseEntity.ok().build();
     }
 
