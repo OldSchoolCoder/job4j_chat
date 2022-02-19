@@ -20,8 +20,9 @@ public class RoomController {
     }
 
     @GetMapping("/")
-    public List<Room> findAll() {
-        return (List<Room>) roomRepository.findAll();
+    public ResponseEntity<List<Room>> findAll() {
+        return new ResponseEntity<>((List<Room>) roomRepository.findAll(),
+                HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
