@@ -1,13 +1,16 @@
 package ru.job4j.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Person;
+import ru.job4j.dto.PersonDTO;
 import ru.job4j.exception_handling.WrongIdException;
+import ru.job4j.mappers.PersonMapper;
 import ru.job4j.repository.PersonRepository;
 
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/person")
 public class PersonController {
 
@@ -23,12 +27,13 @@ public class PersonController {
     private final BCryptPasswordEncoder encoder;
     private final ObjectMapper objectMapper;
 
-    public PersonController(PersonRepository personRepository,
-                            BCryptPasswordEncoder encoder,
-                            ObjectMapper objectMapper) {
-        this.personRepository = personRepository;
-        this.encoder = encoder;
-        this.objectMapper = objectMapper;
+    private void exceptionGuard(@RequestBody Person person) {
+        var username = person.getName();
+        var password = person.getPassword();
+        if (username == null || password == null) {
+            throw new NullPointerException("Username and password" +
+                    " mustn't be empty");
+        }
     }
 
     @GetMapping("/")
@@ -44,26 +49,23 @@ public class PersonController {
                         "Wrong id! Person not found!")), HttpStatus.OK);
     }
 
+    @PatchMapping("/")
+    public ResponseEntity<PersonDTO> mapping(@RequestBody Person person) {
+        exceptionGuard(person);
+        PersonDTO personDTO = PersonMapper.INSTANCE.toDTO(person);
+        return new ResponseEntity<>(personDTO, HttpStatus.OK);
+    }
+
     @PostMapping("/")
     public ResponseEntity<Person> create(@RequestBody Person person) {
-        var username = person.getName();
-        var password = person.getPassword();
-        if (username == null || password == null) {
-            throw new NullPointerException("Username and password" +
-                    " mustn't be empty");
-        }
+        exceptionGuard(person);
         var savedPerson = personRepository.save(person);
         return new ResponseEntity<>(savedPerson, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Person person) {
-        var username = person.getName();
-        var password = person.getPassword();
-        if (username == null || password == null) {
-            throw new NullPointerException("Username and password" +
-                    " mustn't be empty");
-        }
+        exceptionGuard(person);
         personRepository.save(person);
         return ResponseEntity.ok().build();
     }
@@ -81,12 +83,7 @@ public class PersonController {
 
     @PostMapping("/sign-up")
     public void signUp(@RequestBody Person person) {
-        var username = person.getName();
-        var password = person.getPassword();
-        if (username == null || password == null) {
-            throw new NullPointerException("Username and password" +
-                    " mustn't be empty");
-        }
+        exceptionGuard(person);
         person.setPassword(encoder.encode(person.getPassword()));
         personRepository.save(person);
     }

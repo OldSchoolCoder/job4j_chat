@@ -4,7 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import ru.job4j.domain.Person;
 import ru.job4j.domain.Role;
+import ru.job4j.dto.PersonDTO;
+import ru.job4j.dto.RoleDTO;
+import ru.job4j.mappers.PersonMapper;
+import ru.job4j.mappers.RoleMapper;
 import ru.job4j.repository.RoleRepository;
 
 import java.util.List;
@@ -17,6 +22,12 @@ public class RoleController {
 
     public RoleController(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
+    }
+
+    private void exceptionGuard(Role role) {
+        if (role.getName() == null) {
+            throw new NullPointerException("Error! Name of role is null!");
+        }
     }
 
     @GetMapping("/")
@@ -32,20 +43,23 @@ public class RoleController {
                         "Wrong id! Role not found!")), HttpStatus.OK);
     }
 
+    @PatchMapping("/")
+    public ResponseEntity<RoleDTO> mapping(@RequestBody Role role) {
+        exceptionGuard(role);
+        RoleDTO roleDTO = RoleMapper.INSTANCE.toDTO(role);
+        return new ResponseEntity<>(roleDTO, HttpStatus.OK);
+    }
+
     @PostMapping("/")
     public ResponseEntity<Role> create(@RequestBody Role role) {
-        if (role.getName() == null) {
-            throw new NullPointerException("Error! Name of role is null!");
-        }
+        exceptionGuard(role);
         var savedRole = roleRepository.save(role);
         return new ResponseEntity<>(savedRole, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Role role) {
-        if (role.getName() == null) {
-            throw new NullPointerException("Error! Name of role is null!");
-        }
+        exceptionGuard(role);
         roleRepository.save(role);
         return ResponseEntity.ok().build();
     }

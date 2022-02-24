@@ -1,11 +1,15 @@
 package ru.job4j.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Entity
 public class Role {
@@ -16,7 +20,4 @@ public class Role {
 
     @OneToMany(cascade = CascadeType.ALL)
     private List<Person> persons = new ArrayList<>();
-
-    public Role() {
-    }
 }

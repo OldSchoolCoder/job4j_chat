@@ -1,23 +1,29 @@
 package ru.job4j.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Message;
-import ru.job4j.domain.Person;
+import ru.job4j.dto.MessageDTO;
+import ru.job4j.mappers.MessageMapper;
 import ru.job4j.repository.MessageRepository;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/message")
 public class MessageController {
 
     private final MessageRepository messageRepository;
 
-    public MessageController(MessageRepository MessageRepository) {
-        this.messageRepository = MessageRepository;
+    private void exceptionGuard(Message message) {
+        if (message.getDescription() == null) {
+            throw new NullPointerException("Error! " +
+                    "Description of message is null!");
+        }
     }
 
     @GetMapping("/")
@@ -33,22 +39,23 @@ public class MessageController {
                         "Wrong id! Message not found!")), HttpStatus.OK);
     }
 
+    @PatchMapping("/")
+    public ResponseEntity<MessageDTO> mapping(@RequestBody Message message) {
+        exceptionGuard(message);
+        MessageDTO messageDTO = MessageMapper.INSTANCE.toDTO(message);
+        return new ResponseEntity<>(messageDTO, HttpStatus.OK);
+    }
+
     @PostMapping("/")
     public ResponseEntity<Message> create(@RequestBody Message message) {
-        if (message.getDescription() == null) {
-            throw new NullPointerException("Error! " +
-                    "Description of message is null!");
-        }
+        exceptionGuard(message);
         var savedMessage = messageRepository.save(message);
         return new ResponseEntity<>(savedMessage, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
     public ResponseEntity<Void> update(@RequestBody Message message) {
-        if (message.getDescription() == null) {
-            throw new NullPointerException("Error! " +
-                    "Description of message is null!");
-        }
+        exceptionGuard(message);
         messageRepository.save(message);
         return ResponseEntity.ok().build();
     }
