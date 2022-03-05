@@ -2,6 +2,7 @@ package ru.job4j.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Role;
@@ -10,10 +11,13 @@ import ru.job4j.dto.RoleDTO;
 import ru.job4j.dto.RoomDTO;
 import ru.job4j.mappers.RoleMapper;
 import ru.job4j.mappers.RoomMapper;
+import ru.job4j.operation.Operation;
 import ru.job4j.repository.RoomRepository;
 
+import javax.validation.Valid;
 import java.util.List;
 
+@Validated
 @RestController
 @RequestMapping("/room")
 public class RoomController {
@@ -45,24 +49,27 @@ public class RoomController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<RoomDTO> mapping(@RequestBody Room room) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<RoomDTO> mapping(@Valid @RequestBody Room room) {
         exceptionGuard(room);
         RoomDTO roomDTO = RoomMapper.INSTANCE.toDTO(room);
         return new ResponseEntity<>(roomDTO, HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Room> create(@RequestBody Room room) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Room> create(@Valid @RequestBody Room room) {
         exceptionGuard(room);
         var savedRoom = roomRepository.save(room);
         return new ResponseEntity<>(savedRoom, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Room room) {
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Room> update(@Valid @RequestBody Room room) {
         exceptionGuard(room);
-        roomRepository.save(room);
-        return ResponseEntity.ok().build();
+        var savedRoom = roomRepository.save(room);
+        return new ResponseEntity<>(savedRoom, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

@@ -3,15 +3,19 @@ package ru.job4j.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Message;
 import ru.job4j.dto.MessageDTO;
 import ru.job4j.mappers.MessageMapper;
+import ru.job4j.operation.Operation;
 import ru.job4j.repository.MessageRepository;
 
+import javax.validation.Valid;
 import java.util.List;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/message")
@@ -40,24 +44,30 @@ public class MessageController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<MessageDTO> mapping(@RequestBody Message message) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<MessageDTO>
+    mapping(@Valid @RequestBody Message message) {
         exceptionGuard(message);
         MessageDTO messageDTO = MessageMapper.INSTANCE.toDTO(message);
         return new ResponseEntity<>(messageDTO, HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Message> create(@RequestBody Message message) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Message>
+    create(@Valid @RequestBody Message message) {
         exceptionGuard(message);
         var savedMessage = messageRepository.save(message);
         return new ResponseEntity<>(savedMessage, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Message message) {
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Message>
+    update(@Valid @RequestBody Message message) {
         exceptionGuard(message);
-        messageRepository.save(message);
-        return ResponseEntity.ok().build();
+        var savedMessage = messageRepository.save(message);
+        return new ResponseEntity<>(savedMessage, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")

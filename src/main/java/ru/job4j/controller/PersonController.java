@@ -5,19 +5,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import ru.job4j.domain.Person;
 import ru.job4j.dto.PersonDTO;
 import ru.job4j.exception_handling.WrongIdException;
 import ru.job4j.mappers.PersonMapper;
+import ru.job4j.operation.Operation;
 import ru.job4j.repository.PersonRepository;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/person")
@@ -50,24 +54,30 @@ public class PersonController {
     }
 
     @PatchMapping("/")
-    public ResponseEntity<PersonDTO> mapping(@RequestBody Person person) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<PersonDTO>
+    mapping(@Valid @RequestBody Person person) {
         exceptionGuard(person);
         PersonDTO personDTO = PersonMapper.INSTANCE.toDTO(person);
         return new ResponseEntity<>(personDTO, HttpStatus.OK);
     }
 
     @PostMapping("/")
-    public ResponseEntity<Person> create(@RequestBody Person person) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Person>
+    create(@Valid @RequestBody Person person) {
         exceptionGuard(person);
         var savedPerson = personRepository.save(person);
         return new ResponseEntity<>(savedPerson, HttpStatus.CREATED);
     }
 
     @PutMapping("/")
-    public ResponseEntity<Void> update(@RequestBody Person person) {
+    @Validated(Operation.OnUpdate.class)
+    public ResponseEntity<Person>
+    update(@Valid @RequestBody Person person) {
         exceptionGuard(person);
-        personRepository.save(person);
-        return ResponseEntity.ok().build();
+        var savedPerson = personRepository.save(person);
+        return new ResponseEntity<>(savedPerson, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
@@ -82,10 +92,12 @@ public class PersonController {
     }
 
     @PostMapping("/sign-up")
-    public void signUp(@RequestBody Person person) {
+    @Validated(Operation.OnCreate.class)
+    public ResponseEntity<Person> signUp(@Valid @RequestBody Person person) {
         exceptionGuard(person);
         person.setPassword(encoder.encode(person.getPassword()));
-        personRepository.save(person);
+        var savedPerson = personRepository.save(person);
+        return new ResponseEntity<>(savedPerson, HttpStatus.CREATED);
     }
 
     @ExceptionHandler(value = {WrongIdException.class})
